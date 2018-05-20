@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chat</title>
+	
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.6/assets/css/emojione.min.css"/>
+	<link rel="stylesheet" href="/style.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+<body>
+<header class="navbar navbar-dark bg-dark ">
+	<a href="/" class="navbar-brand">Chat</a>
+</header>
+<main id="app">
+	<div class="container">
+		<div class="row my-3">
+			<div class="col">				
+				<div class="card p-3 h-100">
+					<ul id="chat-messages" class="chat card-body" v-html="chatContent">
+
+					</ul>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row" v-if="joined">
+			<div class="col">
+				<div class="input-group">
+					<input type="text" class="form-control" placeholder="Message" aria-label="Message" aria-describedby="basic-addon2" v-model="newMsg" @keyup.enter="send">
+					<div class="input-group-append">
+						<button class="btn btn-primary" type="button" @click="send"><i class="fa fa-paper-plane" aria-hidden="true"></i> Send</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row" v-if="!joined">
+				<div class="col">
+					<div class="input-group">
+					<input type="text" class="form-control"  v-model.trim="email" placeholder="Email" aria-label="Email" aria-describedby="basic-addon2">
+				</div>
+			
+				<div class="input-group mb-3">
+					<input type="text" class="form-control"  v-model.trim="username" placeholder="Username" aria-label="Username" aria-describedby="basic-addon2" @keyup.enter="join">
+					<div class="input-group-append">
+						<button class="btn btn-primary" type="button" @click="join()"><i class="fa fa-sign-in" aria-hidden="true"></i> Join</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="alert alert-danger fixed-bottom m-2" id="email-alert" style="width: 30%">
+			<strong>Fail! </strong>
+			You must enter an email
+	</div>
+	<div class="alert alert-danger fixed-bottom m-2" id="username-alert" style="width: 30%">
+			<strong>Fail! </strong>
+			You must choose a username
+	</div>
+
+</main>
+<script src="https://unpkg.com/vue@2.1.3/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/md5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+<script src="/app.js"></script>
+</body>
+</html>
