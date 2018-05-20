@@ -45,7 +45,7 @@ func main() {
 	//	log.Fatal("ListenAndServe: ", err)
 	//}
 
-	log.Fatal(http.ListenAndServe("35.230.120.158:80", nil))
+	log.Fatal(http.ListenAndServe("localhost:80", nil))
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
