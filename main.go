@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var clients = make(map[*websocket.Conn]bool) // connected clients
-var broadcast = make(chan Message)           // broadcast channel
+var clients = make(map[*websocket.Conn]Message) // connected clients
+var broadcast = make(chan Message)              // broadcast channel
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader{
@@ -59,7 +59,10 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	defer ws.Close()
 
 	// Register our new client
-	clients[ws] = true
+	clients[ws] = Message{
+		Email:    "anonymous@mail.com",
+		Username: "anonymous user",
+		Message:  "#anonymous#"}
 
 	for {
 		var msg Message
@@ -84,6 +87,21 @@ func handleMessages() {
 	for {
 		// Grab the next message from the broadcast channel
 		msg := <-broadcast
+
+		if msg.Message == "#anonymous#" {
+			msg.Message = "An unknown user joined this room."
+			msg.Email = "Manager@chat.com"
+			msg.Username = "Room Manager"
+		} else if msg.Message == "#join#" {
+			msg.Message = "An unknown user set nickname as " + msg.Username + "."
+			msg.Email = "Manager@chat.com"
+			msg.Username = "Room Manager"
+		} else if msg.Message == "#left#" {
+			msg.Message = msg.Username + " has left this room."
+			msg.Email = "Manager@chat.com"
+			msg.Username = "Room Manager"
+		}
+
 		// Send it out to every client that is currently connected
 		for client := range clients {
 			err := client.WriteJSON(msg)

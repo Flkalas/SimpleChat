@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Chat</title>
 	
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -39,8 +41,8 @@
 		</div>
 
 		<div class="row" v-if="!joined">
-				<div class="col">
-					<div class="input-group">
+			<div class="col">
+				<div class="input-group">
 					<input type="text" class="form-control"  v-model.trim="email" placeholder="Email" aria-label="Email" aria-describedby="basic-addon2">
 				</div>
 			
@@ -52,7 +54,14 @@
 				</div>
 			</div>
 		</div>
+		<div class="row">
+			<div class="col">
+				<p class="my-3 text-muted"><small>If you want to set you profile image, go to <a target="_blank" href="https://gravatar.com">gravatar.com</a> and upload your profile image.</small></p> 
+			</div>
+		</div>
 	</div>
+	
+	
 	<div class="alert alert-danger fixed-bottom m-2" id="email-alert" style="width: 30%">
 			<strong>Fail! </strong>
 			You must enter an email
@@ -64,8 +73,10 @@
 
 </main>
 <script src="https://unpkg.com/vue@2.1.3/dist/vue.min.js"></script>
-<script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/emojione/2.2.6/lib/js/emojione.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify-jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/md5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>

@@ -15,6 +15,16 @@ main {
     overflow-y: scroll;
 }
 
+img {
+    width: 4rem;
+}
+
+@media screen and (max-width: 768px) {
+    .img-sizing {
+        width: 3rem;
+    }
+}
+
 .chat
 {
     list-style: none;
@@ -67,3 +77,4 @@ main {
 .border-3 {
     border-width:3px !important;
 }
+
