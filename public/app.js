@@ -18,7 +18,7 @@ new Vue({
             self.chatContent +=
                 '<li class="left clearfix single-message">'+
                 '<span class="chat-img float-left">'+
-                '<img src="'+self.getImageURL(msg.email)+'" alt="Avatar" class="border border-3 border-dark rounded-circle mr-3 img-sizing"/>'+
+                '<img src="'+self.getImageURL(msg.email)+'" alt="Avatar" class="border border-3 border-dark rounded-circle img-sizing"/>'+
                 '</span>'+
                 '<div class="chat-body clearfix">'+
                 '<div class="header">'+

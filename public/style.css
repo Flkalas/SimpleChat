@@ -17,11 +17,20 @@ main {
 
 img {
     width: 4rem;
+    margin-right: 1rem;
 }
 
 @media screen and (max-width: 768px) {
     .img-sizing {
         width: 3rem;
+        margin-right: 0.7rem;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .img-sizing {
+        width: 1.3rem;
+        margin-right: 0.5rem;
     }
 }
 
