@@ -7,7 +7,8 @@ new Vue({
         chatContent: '', // A running list of chat messages displayed on the screen
         email: null, // Email address used for grabbing an avatar
         username: null, // Our username
-        joined: false // True if email and username have been filled in
+        joined: false, // True if email and username have been filled in
+        prevMsg: ''
     },
 
     created: function() {
@@ -38,14 +39,15 @@ new Vue({
                 }
             ));
         });
-        window.addEventListener('beforeunload', this.leaving);
-        
     },
 
     updated: function(){
         $('li.single-message p').linkify({
             target: "_blank"
         });
+        if(this.prevMsg != '' && this.newMsg == this.prevMsg){
+            this.newMsg = '';
+        }
     },
 
     methods: {
@@ -58,8 +60,9 @@ new Vue({
                         message: $('<p>').html(this.newMsg).text() // Strip out html
                     }
                 ));
-                this.newMsg = ''; // Reset newMsg
             }
+            this.prevMsg = this.newMsg;
+            this.newMsg = '';
         },
 
         getImageURL: function(email){
@@ -97,24 +100,18 @@ new Vue({
 
         showAlert: function(target){
             target.fadeTo(50, 1).delay(2200).fadeTo(500, 0);
-        },
-
-        leaving: function(){
-            this.ws.send(
-                JSON.stringify({
-                    email: 'Manager@chat.com',
-                    username: this.username || 'anonymous user',
-                    message: '#left#'
-                }
-            ));
         }
     }
 });
 
-
 $(document).ready (function(){
     $("#email-alert").hide();
     $("#username-alert").hide();    
+    var _originalSize = $(window).width() + $(window).height()
+    $(window).resize(function(){
+        var element = document.getElementById('chat-messages');
+        element.scrollTop = element.scrollHeight 
+    });
 });
 
 $("#chat-messages").bind("DOMSubtreeModified", function (){

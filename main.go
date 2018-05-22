@@ -56,6 +56,13 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Make sure we close the connection w	hen the function returns
+	ws.SetCloseHandler(func(code int, text string) error {
+		broadcast <- Message{
+			Email:    "anonymous@mail.com",
+			Username: clients[ws].Username,
+			Message:  "#left#"}
+		return nil
+	})
 	defer ws.Close()
 
 	// Register our new client
@@ -74,6 +81,7 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		// Send the newly received message to the broadcast channel
+		clients[ws] = msg
 		broadcast <- msg
 	}
 
