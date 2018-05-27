@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/websocket"
@@ -20,9 +21,10 @@ var upgrader = websocket.Upgrader{
 
 // Message object
 type Message struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Message  string `json:"message"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	Message     string `json:"message"`
+	Information string `json:"information"`
 }
 
 func main() {
@@ -58,18 +60,31 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	// Make sure we close the connection w	hen the function returns
 	ws.SetCloseHandler(func(code int, text string) error {
 		broadcast <- Message{
-			Email:    "anonymous@mail.com",
-			Username: clients[ws].Username,
-			Message:  "#left#"}
+			Email:       "anonymous@mail.com",
+			Username:    clients[ws].Username,
+			Message:     "#left#",
+			Information: ""}
 		return nil
 	})
 	defer ws.Close()
 
 	// Register our new client
 	clients[ws] = Message{
-		Email:    "anonymous@mail.com",
-		Username: "anonymous user",
-		Message:  "#anonymous#"}
+		Email:       "anonymous@mail.com",
+		Username:    "unknown user",
+		Message:     "#anonymous#",
+		Information: ""}
+
+	for client := range clients {
+		if client != ws {
+			msg := Message{
+				Email:       "Manager@chat.com",
+				Username:    "unknown user",
+				Message:     "#userlistjoin#",
+				Information: clients[client].Username}
+			ws.WriteJSON(msg)
+		}
+	}
 
 	for {
 		var msg Message
@@ -96,16 +111,28 @@ func handleMessages() {
 		// Grab the next message from the broadcast channel
 		msg := <-broadcast
 
-		if msg.Message == "#anonymous#" {
-			msg.Message = "An unknown user joined this room."
+		if strings.TrimSpace(msg.Message) == "" {
+			continue
+		}
+
+		if msg.Message == "#login#" {
+			msg.Message = msg.Username + " joined this room."
+			msg.Information = msg.Username
 			msg.Email = "Manager@chat.com"
 			msg.Username = "Room Manager"
 		} else if msg.Message == "#join#" {
 			msg.Message = "An unknown user set nickname as " + msg.Username + "."
+			msg.Information = msg.Username
 			msg.Email = "Manager@chat.com"
 			msg.Username = "Room Manager"
 		} else if msg.Message == "#left#" {
 			msg.Message = msg.Username + " has left this room."
+			msg.Information = msg.Username
+			msg.Email = "Manager@chat.com"
+			msg.Username = "Room Manager"
+		} else if msg.Message == "#change#" {
+			msg.Message = msg.Username + " change nickname as " + msg.Email + "."
+			msg.Information = msg.Username + "," + msg.Email
 			msg.Email = "Manager@chat.com"
 			msg.Username = "Room Manager"
 		}
