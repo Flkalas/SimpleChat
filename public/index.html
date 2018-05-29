@@ -34,11 +34,11 @@
 							
 						</ul>
 						<button class="btn btn-outline-primary w-100" type="button" @click="clear()"><i class="fa fa-trash" aria-hidden="true"></i> Clear chats</button>
-						<button id="top-in-button" class="top-button m-0 p-0 align-self-center btn btn-outline-secondary border w-100" data-toggle="collapse" data-target="#top-bar">🡹 Close</button>
+						<button id="top-in-button" class="top-button m-0 p-0 align-self-center btn btn-outline-secondary border w-100" data-toggle="collapse" data-target="#top-bar"><i class="fa fa-arrow-up" aria-hidden="true"></i> Close</button>
 					</div>
 					
 				</div>
-				<button id="top-out-button" class="top-button m-0 p-0 align-self-center btn btn-outline-secondary border w-100" data-toggle="collapse" data-target="#top-bar">🡻 Show Menu</button>
+				<button id="top-out-button" class="top-button m-0 p-0 align-self-center btn btn-outline-secondary border w-100" data-toggle="collapse" data-target="#top-bar"><i class="fa fa-arrow-down" aria-hidden="true"></i> Show Menu</button>
 			</div>
 		</div>
 
@@ -72,7 +72,7 @@
 					<div id="side-out-button" class="side-button m-0 p-0 mr-3 align-self-center btn btn-outline-secondary border" data-toggle="collapse" data-target="#side-bar" hidden>
 						<p>⟩⟩</p> 
 					</div>
-					<div class="card py-3 h-100 w-100">
+					<div id="chat-body" class="card py-3 h-100 w-100">
 						<ul id="chat-messages" class="chat card-body" v-html="chatContent">
 
 						</ul>

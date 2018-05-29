@@ -10,7 +10,8 @@ var app = new Vue({
         username: null, // Our username
         changedUsername: null,
         joined: false, // True if email and username have been filled in
-        prevMsg: ''
+        prevMsg: '',
+        prevCount: 0
     },
 
     created: function() {
@@ -38,20 +39,20 @@ var app = new Vue({
             if(msg.email == "Manager@chat.com"){
                 var message = msg.message;
                 var username = msg.information;
-                if(message.includes("join") > 0){
+                if(message.includes("join")){
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + username.replace(' ','-') + '">' + username + '</li>';
-                }else if(message.includes("set") > 0){
+                        '<li class="p-2 m-0" id="' + username.replace(/\s+/g, '-').toLowerCase() + '">' + username + '</li>';
+                }else if(message.includes("set")){
                     self.removeChatMember('unknown-user')
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + username.replace(' ','-') + '">' + username + '</li>';
-                }else if(message.includes("left") > 0){
+                        '<li class="p-2 m-0" id="' + username.replace(/\s+/g, '-').toLowerCase() + '">' + username + '</li>';
+                }else if(message.includes("left")){
                     self.removeChatMember(username)
-                }else if(message.includes("change") > 0){
+                }else if(message.includes("change")){
                     usernames = username.split(',');
                     self.removeChatMember(usernames[0])
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + usernames[1].replace(' ','-') + '">' + usernames[1] + '</li>';
+                        '<li class="p-2 m-0" id="' + usernames[1].replace(/\s+/g, '-').toLowerCase() + '">' + usernames[1] + '</li>';
                 }
             }
         });
@@ -60,10 +61,6 @@ var app = new Vue({
             self.email = Cookies.get('email') || '';
             self.joined = ((Cookies.get('joined') || 'false') == 'true');
         
-            console.log(self.username);
-            console.log(self.email);
-            console.log(self.joined);
-
             self.ws.send(
                 JSON.stringify({
                     email: self.email == '' ? 'anonymous@mail.com' : self.email,
@@ -77,9 +74,39 @@ var app = new Vue({
     },
 
     updated: function(){
-        $('li.single-message p').linkify({
-            target: "_blank"
-        });
+        var allMsg = $('li.single-message p');
+        if ( allMsg.length != this.prevCount ){
+            allMsg.linkify({
+                target: "_blank"
+            });
+            this.prevCount = allMsg.length;
+
+            var self = this;
+            allMsg.each( function(i,e){
+                var msgTag = $(this).find('a.linkified');
+                if ( msgTag.length ) {
+                    var regex = /(.jpeg|.jpg|.gif|.png|.apng|.svg|.bmp|.ico)/gi;
+                    if (regex.test(msgTag.html())) {
+                        var imgSource = msgTag.attr('href');
+                        self.getMeta(imgSource, function(width, height) { 
+                            var chatBodyHeight = $('#chat-body').height();
+                            var imgClass = '';
+
+                            if(height*10/19 < chatBodyHeight){
+                                imgClass = 'chat-image';
+                            } else if (height*10/39 < chatBodyHeight){
+                                imgClass = 'chat-image-half';
+                            }
+
+                            if (imgClass != ''){
+                                msgTag.text( '' );
+                                msgTag.append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
+                            }
+                        });
+                    }
+                }
+            });
+        }
         if(this.prevMsg != '' && this.newMsg == this.prevMsg){
             this.newMsg = '';
             this.prevMsg = '';
@@ -167,12 +194,18 @@ var app = new Vue({
 
         removeChatMember: function(username){
             var html = $.parseHTML(this.chatMember);
-            html = $(html).not('#'+username.replace(' ','-')+':first');
+            html = $(html).not('#'+username.replace(/\s+/g, '-').toLowerCase()+':first');
             var s = '';
             $(html).each(function(){
                 s += $(this).clone().wrap('<ul>').parent().html();
             });
             this.chatMember = s;
+        },
+
+        getMeta: function(url, callback) {
+            var img = new Image();
+            img.src = url;
+            img.onload = function() { callback(this.width, this.height); }
         }
     }
 });
