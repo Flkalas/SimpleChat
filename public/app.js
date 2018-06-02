@@ -1,3 +1,25 @@
+var saveCookie = function(e){
+    Cookies.set('username', app.username, { expires: 1/4320 });
+    Cookies.set('email', app.email, { expires: 1/4320 });
+    Cookies.set('joined', app.joined, { expires: 1/4320 });
+};
+
+var isChatBottom = true;
+
+var checkChatBottom = function(){
+    var element = document.getElementById('chat-messages');
+    isChatBottom = ((element.scrollTop + element.clientHeight) >= element.scrollHeight)
+    return isChatBottom
+}
+
+var scrollChatToBottom = function(){
+    if(!isChatBottom){
+        return 
+    }
+    var element = document.getElementById('chat-messages');
+    element.scrollTop = element.scrollHeight 
+}
+
 var app = new Vue({
     el: '#app',
 
@@ -11,7 +33,7 @@ var app = new Vue({
         changedUsername: null,
         joined: false, // True if email and username have been filled in
         prevMsg: '',
-        prevCount: 0
+        msgCount: 0
     },
 
     created: function() {
@@ -19,9 +41,38 @@ var app = new Vue({
         this.ws = new WebSocket('ws://' + window.location.host + '/ws');
         this.ws.addEventListener('message', function(e) {
             var msg = JSON.parse(e.data);
-
+            var msgId = 'msg-' + self.msgCount;
 
             if (msg.message != "#userlistjoin#") {
+                var msgContent = $('<p>' + emojione.toImage(msg.message) + '</p>').linkify({target: "_blank"}); //$('li.single-message:last p').linkify({target: "_blank"});
+
+                $(msgContent).find('a.linkified').each(function( index, element ) {
+                    var imgSource = $(element).attr('href');
+                    self.getMeta(imgSource, function(width, height) { 
+                        if(((width || 0) == 0) || ((height || 0) == 0)){
+                            return
+                        }
+    
+                        var chatBodyHeight = $('#chat-body').height();
+                        var imgClass = '';
+    
+                        if(height*10/19 < chatBodyHeight){
+                            imgClass = 'chat-image';
+                        } else if (height*10/39 < chatBodyHeight){
+                            imgClass = 'chat-image-half';
+                        }
+    
+                        if (imgClass != ''){
+                            $(element).text( '' );
+                            $(element).append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
+                        }
+
+                        $('#'+msgId).html(msgContent.html());
+                        self.chatContent = $('#chat-messages').html();
+                    });
+                });
+
+                checkChatBottom();
                 self.chatContent +=
                     '<li class="left clearfix single-message">'+
                     '<span class="chat-img float-left">'+
@@ -31,9 +82,11 @@ var app = new Vue({
                     '<div class="header">'+
                     '<strong class="primary-font">'+msg.username+'</strong>'+
                     '</div>'+
-                    '<p>'+emojione.toImage(msg.message)+'</p>'+
+                    '<p id="' + msgId + '">'+msgContent.html()+'</p>'+
                     '</div>'+
                     '</li>';
+
+                self.msgCount++;
             }
 
             if(msg.email == "Manager@chat.com"){
@@ -41,18 +94,18 @@ var app = new Vue({
                 var username = msg.information;
                 if(message.includes("join")){
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + username.replace(/\s+/g, '-').toLowerCase() + '">' + username + '</li>';
+                        '<li class="p-2 m-0" id="' + self.slugify(username) + '">' + username + '</li>';
                 }else if(message.includes("set")){
                     self.removeChatMember('unknown-user')
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + username.replace(/\s+/g, '-').toLowerCase() + '">' + username + '</li>';
+                        '<li class="p-2 m-0" id="' + self.slugify(username) + '">' + username + '</li>';
                 }else if(message.includes("left")){
                     self.removeChatMember(username)
                 }else if(message.includes("change")){
                     usernames = username.split(',');
                     self.removeChatMember(usernames[0])
                     self.chatMember += 
-                        '<li class="p-2 m-0" id="' + usernames[1].replace(/\s+/g, '-').toLowerCase() + '">' + usernames[1] + '</li>';
+                        '<li class="p-2 m-0" id="' + self.slugify(usernames[1]) + '">' + usernames[1] + '</li>';
                 }
             }
         });
@@ -70,43 +123,9 @@ var app = new Vue({
                 }
             ));
         })
-
     },
 
     updated: function(){
-        var allMsg = $('li.single-message p');
-        if ( allMsg.length != this.prevCount ){
-            allMsg.linkify({
-                target: "_blank"
-            });
-            this.prevCount = allMsg.length;
-
-            var self = this;
-            allMsg.each( function(i,e){
-                var msgTag = $(this).find('a.linkified');
-                if ( msgTag.length ) {
-                    var regex = /(.jpeg|.jpg|.gif|.png|.apng|.svg|.bmp|.ico)/gi;
-                    if (regex.test(msgTag.html())) {
-                        var imgSource = msgTag.attr('href');
-                        self.getMeta(imgSource, function(width, height) { 
-                            var chatBodyHeight = $('#chat-body').height();
-                            var imgClass = '';
-
-                            if(height*10/19 < chatBodyHeight){
-                                imgClass = 'chat-image';
-                            } else if (height*10/39 < chatBodyHeight){
-                                imgClass = 'chat-image-half';
-                            }
-
-                            if (imgClass != ''){
-                                msgTag.text( '' );
-                                msgTag.append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
-                            }
-                        });
-                    }
-                }
-            });
-        }
         if(this.prevMsg != '' && this.newMsg == this.prevMsg){
             this.newMsg = '';
             this.prevMsg = '';
@@ -194,7 +213,7 @@ var app = new Vue({
 
         removeChatMember: function(username){
             var html = $.parseHTML(this.chatMember);
-            html = $(html).not('#'+username.replace(/\s+/g, '-').toLowerCase()+':first');
+            html = $(html).not('#'+this.slugify(username)+':first');
             var s = '';
             $(html).each(function(){
                 s += $(this).clone().wrap('<ul>').parent().html();
@@ -206,37 +225,49 @@ var app = new Vue({
             var img = new Image();
             img.src = url;
             img.onload = function() { callback(this.width, this.height); }
+        },
+
+        slugify: function(text) {
+            var slug = text.toLowerCase().trim()
+                .replace(/[\s`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]+/g, '-')       // Swap any length of whitespace, underscore, hyphen characters with a single -
+                .replace(/^-+|-+$/g, '');       // Remove leading, trailing -
+
+            if( slug == '' ){
+                slug = 'no-id'
+            }
+
+            return slug
         }
     }
 });
 
-var saveCookie = function(e){
-    Cookies.set('username', app.username, { expires: 1/4320 });
-    Cookies.set('email', app.email, { expires: 1/4320 });
-    Cookies.set('joined', app.joined, { expires: 1/4320 });
-};
+var chatBottomFix = function(){
+    checkChatBottom();
+    scrollChatToBottom();
+}
 
 $(window).on('load', function(){
     $("#username-alert").hide();
     
-    var _originalSize = $(window).width() + $(window).height()
-    $(window).resize(function(){
-        var element = document.getElementById('chat-messages');
-        element.scrollTop = element.scrollHeight 
-    });
+    $(window).resize(chatBottomFix);
+    $("#chat-messages").resize(chatBottomFix);
 
     $("#side-in-button").on("click", function(e){
+        checkChatBottom();
         $("#side-bar").removeClass(['d-md-block', 'col-md-4', 'col-lg-3', 'col-xl-3']);
         $("#side-bar").addClass(['d-md-none']);
         $("#main-content").removeClass(['col-md-8', 'col-lg-9', 'col-xl-9']);
         $("#side-out-button").removeAttr("hidden");
+        scrollChatToBottom();
     })
 
     $("#side-out-button").on("click", function(e){
+        checkChatBottom();
         $("#side-bar").addClass(['d-md-block', 'col-md-4', 'col-lg-3', 'col-xl-3']);
         $("#side-bar").removeClass(['d-md-none']);
         $("#main-content").addClass(['col-md-8', 'col-lg-9', 'col-xl-9']);
         $("#side-out-button").attr("hidden", "hidden");
+        scrollChatToBottom();
     })
 
     $("#top-in-button").on("click", function(e){
@@ -247,11 +278,12 @@ $(window).on('load', function(){
         $("#top-out-button").attr("hidden", "hidden");
     })
 
+    $("#chat-messages").bind("DOMSubtreeModified", function (){
+        if (isChatBottom){
+            var element = document.getElementById('chat-messages');
+            element.scrollTop = element.scrollHeight + $('.single-message').last().prop('scrollHeight'); // Auto scroll to the bottom
+        }
+    });
 
     $(window).on('unload', saveCookie);
-});
-
-$("#chat-messages").bind("DOMSubtreeModified", function (){
-    var element = document.getElementById('chat-messages');
-    element.scrollTop = element.scrollHeight + $('.single-message').last().prop('scrollHeight'); // Auto scroll to the bottom
 });
