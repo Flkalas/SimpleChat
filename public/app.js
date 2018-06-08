@@ -33,10 +33,12 @@ var app = new Vue({
         changedUsername: null,
         joined: false, // True if email and username have been filled in
         prevMsg: '',
-        msgCount: 0
+        msgCount: 0,
+        isNotice: false,
     },
 
     created: function() {
+        var audio = new Audio('receive.wav')
         var self = this;
         this.ws = new WebSocket('ws://' + window.location.host + '/ws');
         this.ws.addEventListener('message', function(e) {
@@ -72,11 +74,12 @@ var app = new Vue({
                     });
                 });
 
+                var img = self.getImageURL(msg.email);
                 checkChatBottom();
                 self.chatContent +=
                     '<li class="left clearfix single-message">'+
                     '<span class="chat-img float-left">'+
-                    '<img src="'+self.getImageURL(msg.email)+'" alt="Avatar" class="border border-3 border-dark rounded-circle img-sizing"/>'+
+                    '<img src="'+ img +'" alt="Avatar" class="border border-3 border-dark rounded-circle img-sizing"/>'+
                     '</span>'+
                     '<div class="chat-body clearfix">'+
                     '<div class="header">'+
@@ -85,6 +88,14 @@ var app = new Vue({
                     '<p id="' + msgId + '">'+msgContent.html()+'</p>'+
                     '</div>'+
                     '</li>';
+
+                if (self.isNotice){
+                    var n = new Notification(msg.username, { body: msgContent.text(), icon: img });
+                    setTimeout(function(){
+                        n.close();
+                    }, 3000);
+                    audio.play();
+                }
 
                 self.msgCount++;
             }
@@ -285,5 +296,25 @@ $(window).on('load', function(){
         }
     });
 
+    $("#top-in-button").on("click", function(e){
+        $("#top-out-button").removeAttr("hidden");
+    })
+
+    $("#top-out-button").on("click", function(e){
+        $("#top-out-button").attr("hidden", "hidden");
+    })
+
+    Notification.requestPermission(function (status) {
+        if (Notification.permission !== status) {
+        Notification.permission = status;
+        }
+    });  
+
+    $(window).blur(function(){
+        app.isNotice = true;
+    });
+    $(window).focus(function(){
+        app.isNotice = false;
+    });
     $(window).on('unload', saveCookie);
 });
