@@ -88,7 +88,7 @@ func publicAppJs() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "public/app.js", size: 11689, mode: os.FileMode(438), modTime: time.Unix(1528476650, 0)}
+	info := bindataFileInfo{name: "public/app.js", size: 11689, mode: os.FileMode(438), modTime: time.Unix(1528477911, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -108,7 +108,7 @@ func publicIndexHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "public/index.html", size: 6977, mode: os.FileMode(438), modTime: time.Unix(1528476650, 0)}
+	info := bindataFileInfo{name: "public/index.html", size: 6977, mode: os.FileMode(438), modTime: time.Unix(1528477911, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -168,7 +168,7 @@ func publicStyleCss() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "public/style.css", size: 2516, mode: os.FileMode(438), modTime: time.Unix(1528476650, 0)}
+	info := bindataFileInfo{name: "public/style.css", size: 2516, mode: os.FileMode(438), modTime: time.Unix(1528477911, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

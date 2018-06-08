@@ -36,6 +36,7 @@ func main() {
 	// Configure websocket route
 	http.HandleFunc("/ws", handleConnections)
 	http.HandleFunc("/favicon.ico", faviconHandler)
+	http.HandleFunc("/.well-known/acme-challenge/Kb2QAg8lwAVBkHiIx1AzZpNa0euQU6ssK_8HOWajDl4", verificationHandler)
 
 	// Start listening for incoming chat messages
 	go handleMessages()
@@ -104,6 +105,10 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
+}
+
+func verificationHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./well-known/acme-challenge/Kb2QAg8lwAVBkHiIx1AzZpNa0euQU6ssK_8HOWajDl4")
 }
 
 func handleMessages() {
