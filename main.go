@@ -28,37 +28,37 @@ type Message struct {
 }
 
 func main() {
-	// Use binary asset FileServer
+	go handleMessages()
+
+	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
 	http.Handle("/",
 		http.FileServer(
 			&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo, Prefix: "public"}))
 
-	// Configure websocket route
 	http.HandleFunc("/ws", handleConnections)
 	http.HandleFunc("/favicon.ico", faviconHandler)
-	http.HandleFunc("/.well-known/acme-challenge/Kb2QAg8lwAVBkHiIx1AzZpNa0euQU6ssK_8HOWajDl4", verificationHandler)
 
-	// Start listening for incoming chat messages
-	go handleMessages()
+	// log.Fatal(http.ListenAndServe("0.0.0.0:80", nil))
+	log.Fatal(http.ListenAndServeTLS(":443", "certificate.crt", "private.key", nil))
+}
 
-	// Start the server on localhost port 8000 and log any errors
-	//log.Println("http server started on :8080")
-	//err := http.ListenAndServe(":8110", nil)
-	//if err != nil {
-	//	log.Fatal("ListenAndServe: ", err)
-	//}
-
-	log.Fatal(http.ListenAndServe("0.0.0.0:80", nil))
+func redirect(w http.ResponseWriter, req *http.Request) {
+	target := "https://" + req.Host + req.URL.Path
+	if len(req.URL.RawQuery) > 0 {
+		target += "?" + req.URL.RawQuery
+	}
+	log.Printf("redirect to: %s", target)
+	http.Redirect(w, req, target,
+		http.StatusTemporaryRedirect)
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade initial GET request to a websocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("error %v", err)
 		return
 	}
-	// Make sure we close the connection w	hen the function returns
+
 	ws.SetCloseHandler(func(code int, text string) error {
 		broadcast <- Message{
 			Email:       "anonymous@mail.com",
@@ -69,7 +69,6 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	})
 	defer ws.Close()
 
-	// Register our new client
 	clients[ws] = Message{
 		Email:       "anonymous@mail.com",
 		Username:    "unknown user",
@@ -105,10 +104,6 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
-}
-
-func verificationHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./well-known/acme-challenge/Kb2QAg8lwAVBkHiIx1AzZpNa0euQU6ssK_8HOWajDl4")
 }
 
 func handleMessages() {
