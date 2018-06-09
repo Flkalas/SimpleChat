@@ -89,7 +89,7 @@ var app = new Vue({
                     '</div>'+
                     '</li>';
 
-                if (self.isNotice){
+                if (self.isNotice && $("#switch-noti").is(':checked')){
                     Notification.requestPermission(function(result) {
                         if (result === 'granted') {
                             navigator.serviceWorker.ready.then(function(registration) {
@@ -97,7 +97,9 @@ var app = new Vue({
                             });
                         }
                     });
-                    audio.play();
+                    if($("#switch-sound").is(':checked')){
+                        audio.play();
+                    }
                 }
 
                 self.msgCount++;
@@ -263,7 +265,7 @@ var chatBottomFix = function(){
 $(window).on('load', function(){
     $("#username-alert").hide();
     
-    $(window).resize(chatBottomFix);
+    $(window).resize(scrollChatToBottom);
     $("#chat-messages").resize(chatBottomFix);
 
     $("#side-in-button").on("click", function(e){
@@ -312,6 +314,28 @@ $(window).on('load', function(){
         app.isNotice = false;
     });
     $(window).on('unload', saveCookie);
+
+    $("#switch-noti").change( function(){
+        var val = $(this).is(':checked')
+        $("#switch-noti-m").prop( "checked", val );
+        $("#switch-sound").prop( "disabled", !val );
+        $("#switch-sound-m").prop( "disabled", !val );
+    });
+
+    $("#switch-noti-m").change( function(){
+        var val = $(this).is(':checked')
+        $("#switch-noti").prop( "checked", val );
+        $("#switch-sound").prop( "disabled", !val );
+        $("#switch-sound-m").prop( "disabled", !val );
+    });
+
+    $("#switch-sound").change( function(){
+        $("#switch-sound-m").prop( "checked", $(this).is(':checked'));
+    });
+    
+    $("#switch-sound-m").change( function(){
+        $("#switch-sound").prop( "checked", $(this).is(':checked')) ;
+    });
 });
 
 navigator.serviceWorker.register('sw.js');

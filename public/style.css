@@ -150,6 +150,15 @@ img {
     width: 25%;
 }
 
+.menu-section{
+    display:  inline;
+    text-align: center;
+}
+
+.menu-item{
+    display: inline-block;
+}
+
 @media screen and (max-width: 576px) {
     .chat-image-half {
         width: 50%;
