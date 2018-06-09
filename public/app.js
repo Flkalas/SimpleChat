@@ -90,10 +90,13 @@ var app = new Vue({
                     '</li>';
 
                 if (self.isNotice){
-                    var n = new Notification(msg.username, { body: msgContent.text(), icon: img });
-                    setTimeout(function(){
-                        n.close();
-                    }, 3000);
+                    Notification.requestPermission(function(result) {
+                        if (result === 'granted') {
+                            navigator.serviceWorker.ready.then(function(registration) {
+                                registration.showNotification(msg.username, { body: msgContent.text(), icon: img, vibrate: [100] })
+                            });
+                        }
+                    });
                     audio.play();
                 }
 
@@ -215,7 +218,7 @@ var app = new Vue({
         },
 
         gravatarURL: function(email) {
-            return 'http://www.gravatar.com/avatar/' + CryptoJS.MD5(email);
+            return 'https://www.gravatar.com/avatar/' + CryptoJS.MD5(email);
         },
 
         showAlert: function(target){
@@ -296,17 +299,9 @@ $(window).on('load', function(){
         }
     });
 
-    $("#top-in-button").on("click", function(e){
-        $("#top-out-button").removeAttr("hidden");
-    })
-
-    $("#top-out-button").on("click", function(e){
-        $("#top-out-button").attr("hidden", "hidden");
-    })
-
     Notification.requestPermission(function (status) {
         if (Notification.permission !== status) {
-        Notification.permission = status;
+            Notification.permission = status;
         }
     });  
 
@@ -318,3 +313,5 @@ $(window).on('load', function(){
     });
     $(window).on('unload', saveCookie);
 });
+
+navigator.serviceWorker.register('sw.js');

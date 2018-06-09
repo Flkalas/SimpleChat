@@ -37,8 +37,9 @@ func main() {
 
 	http.HandleFunc("/ws", handleConnections)
 	http.HandleFunc("/favicon.ico", faviconHandler)
+	http.HandleFunc("/sw.js", serviceWorkerHandler)
 
-	// log.Fatal(http.ListenAndServe("0.0.0.0:80", nil))
+	// log.Fatal(http.ListenAndServeTLS(":443", "dev.chat.com.crt", "dev.chat.com.key", nil))
 	log.Fatal(http.ListenAndServeTLS(":443", "certificate.crt", "private.key", nil))
 }
 
@@ -100,6 +101,11 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		broadcast <- msg
 	}
 
+}
+
+func serviceWorkerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/javascript")
+	http.ServeFile(w, r, "sw.js")
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
