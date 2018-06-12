@@ -40,12 +40,6 @@
 								<label for="switch-noti" class="m-2">Enable Notification</label>
 							</span>
 						</div>
-						<div class="border w-100 menu-section">
-							<span class="switch switch-sm menu-item">
-								<input type="checkbox" class="switch" checked id="switch-sound-m">
-								<label for="switch-sound" class="m-2">Enable Noti Sound</label>
-							</span>
-						</div>
 						<button id="top-in-button" class="top-button m-0 p-0 align-self-center btn btn-outline-secondary border w-100" data-toggle="collapse" data-target="#top-bar"><i class="fa fa-arrow-up" aria-hidden="true"></i> Close</button>
 					</div>
 				</div>
@@ -98,6 +92,11 @@
 						<ul id="chat-messages" class="chat card-body" v-html="chatContent">
 
 						</ul>
+					</div>
+					<div id="overlay" class="box-dragndrop" hidden v-if="joined">
+						<span class="overlay-text">
+							Drop image to send
+						</span>
 					</div>
 				</div>
 			</div>

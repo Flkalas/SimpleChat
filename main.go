@@ -39,7 +39,7 @@ func main() {
 	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc("/sw.js", serviceWorkerHandler)
 
-	// log.Fatal(http.ListenAndServeTLS(":443", "dev.chat.com.crt", "dev.chat.com.key", nil))
+	// log.Fatal(http.ListenAndServeTLS(":8080", "certificate.crt", "private.key", nil))
 	log.Fatal(http.ListenAndServeTLS(":443", "certificate.crt", "private.key", nil))
 }
 

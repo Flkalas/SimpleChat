@@ -46,34 +46,42 @@ var app = new Vue({
             var msgId = 'msg-' + self.msgCount;
 
             if (msg.message != "#userlistjoin#") {
-                var msgContent = $('<p>' + emojione.toImage(msg.message) + '</p>').linkify({target: "_blank"}); //$('li.single-message:last p').linkify({target: "_blank"});
 
-                $(msgContent).find('a.linkified').each(function( index, element ) {
-                    var imgSource = $(element).attr('href');
-                    self.getMeta(imgSource, function(width, height) { 
-                        if(((width || 0) == 0) || ((height || 0) == 0)){
-                            return
-                        }
-    
-                        var chatBodyHeight = $('#chat-body').height();
-                        var imgClass = '';
-    
-                        if(height*10/19 < chatBodyHeight){
-                            imgClass = 'chat-image';
-                        } else if (height*10/39 < chatBodyHeight){
-                            imgClass = 'chat-image-half';
-                        }
-    
-                        if (imgClass != ''){
-                            $(element).text( '' );
-                            $(element).append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
-                        }
+                if(msg.message.includes("#img#")){
+                    msg.message = self.convertStringToBlobImage(msg.information)
+                }
 
-                        $('#'+msgId).html(msgContent.html());
-                        self.chatContent = $('#chat-messages').html();
-                    });
+                var msgContent = $('<p>' + emojione.toImage(msg.message) + '</p>').linkify({target: "_blank"}); 
+
+                var firstLink = $(msgContent).find('a.linkified:first')
+                if(msgContent.text().includes('blob:')){
+                    msgContent.html(msgContent.html().replace("blob:",""));
+                    $(firstLink).attr('href', 'blob:' + $(firstLink).attr('href'));
+                }
+                var imgSource = $(firstLink).attr('href');
+
+                self.getMeta(imgSource, function(width, height) { 
+                    if(((width || 0) == 0) || ((height || 0) == 0)){
+                        return
+                    }
+
+                    var chatBodyHeight = $('#chat-body').height();
+                    var imgClass = '';
+
+                    if(height*10/19 < chatBodyHeight){
+                        imgClass = 'chat-image';
+                    } else if (height*10/39 < chatBodyHeight){
+                        imgClass = 'chat-image-half';
+                    }
+
+                    if (imgClass != ''){
+                        $(firstLink).text( '' );
+                        $(firstLink).append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
+                    }
+
+                    $('#'+msgId).html(firstLink.html());
+                    self.chatContent = $('#chat-messages').html();
                 });
-
                 var img = self.getImageURL(msg.email);
                 checkChatBottom();
                 self.chatContent +=
@@ -253,6 +261,38 @@ var app = new Vue({
             }
 
             return slug
+        },
+
+        sendFileContent: function (file) {
+            if(this.joined){
+                var self = this;
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function () {
+                    self.ws.send(
+                        JSON.stringify({
+                            email: self.email,
+                            username: self.username,
+                            message: '#img#',
+                            information: reader.result
+                        })
+                    );
+                };
+                reader.onerror = function (error) {
+                    console.log('Error: ', error);
+                };
+            }
+        },
+
+        convertStringToBlobImage: function(stringfyImg){
+            var b64Data = atob(stringfyImg.split(',')[1]);
+            var contentType = stringfyImg.split(',')[0].split(':')[1].split(';')[0]
+        
+            var u8Array = new Uint8Array(b64Data.split("").map(function(c){return c.charCodeAt(0); }));
+            var blob = new Blob([u8Array],{type: contentType});
+            var url = URL.createObjectURL(blob);
+
+            return url;
         }
     }
 });
@@ -260,6 +300,31 @@ var app = new Vue({
 var chatBottomFix = function(){
     checkChatBottom();
     scrollChatToBottom();
+}
+
+var showOverlay = function(e){
+    e.preventDefault();
+    var chat = $('#chat-body');
+    var offset = chat.offset();
+
+    var top = offset.top;
+    var left = offset.left;
+
+    var bottom = top + chat.outerHeight();
+    var right = left + chat.outerWidth();
+
+    $('#overlay').css({
+        "top": top,
+        "left": left,
+        "right": right,
+        "bottom": bottom,
+        "width": chat.outerWidth(),
+        "height": chat.outerHeight()
+    });
+    $('.overlay-text').css({
+        "font-size": (chat.outerWidth()/300) + 'rem'
+    });
+    $('#overlay').attr("hidden", false);
 }
 
 $(window).on('load', function(){
@@ -301,6 +366,30 @@ $(window).on('load', function(){
         }
     });
 
+    $(window).on('dragover drop',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    $('#chat-body').on('dragenter', showOverlay);
+    
+    $('#overlay').on('dragover',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    $('#chat-body').on('drop',function(e){
+        e.preventDefault();
+        droppedFiles = e.originalEvent.dataTransfer.files;
+        app.sendFileContent(droppedFiles[0]); 
+
+        $('#overlay').attr("hidden", true);
+    });
+
+    $('#chat-body').on('dragleave', function(){
+        $('#overlay').attr("hidden", true);
+    })
+
     Notification.requestPermission(function (status) {
         if (Notification.permission !== status) {
             Notification.permission = status;
@@ -339,3 +428,4 @@ $(window).on('load', function(){
 });
 
 navigator.serviceWorker.register('sw.js');
+var droppedFiles = false;
