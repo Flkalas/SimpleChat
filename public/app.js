@@ -46,40 +46,44 @@ var app = new Vue({
             var msgId = 'msg-' + self.msgCount;
 
             if (msg.message != "#userlistjoin#") {
-
                 if(msg.message.includes("#img#")){
                     msg.message = self.convertStringToBlobImage(msg.information)
                 }
 
                 var msgContent = $('<p>' + emojione.toImage(msg.message) + '</p>').linkify({target: "_blank"}); 
 
-                var firstLink = $(msgContent).find('a.linkified:first')
                 if(msgContent.text().includes('blob:')){
                     msgContent.html(msgContent.html().replace("blob:",""));
-                    $(firstLink).attr('href', 'blob:' + $(firstLink).attr('href'));
+                    $(msgContent).find('a.linkified:first').text('blob:' +  $(msgContent).find('a.linkified:first').text());
+                    $(msgContent).find('a.linkified:first').attr('href', 'blob:' +  $(msgContent).find('a.linkified:first').attr('href'));
                 }
-                var imgSource = $(firstLink).attr('href');
+                var imgSource = $(msgContent).find('a.linkified:first').attr('href');
 
                 self.getMeta(imgSource, function(width, height) { 
                     if(((width || 0) == 0) || ((height || 0) == 0)){
                         return
                     }
 
+                    var aspect = height/width;
+
+                    var chatBodyWidth = $('#chat-body').width();
                     var chatBodyHeight = $('#chat-body').height();
+                    var chatBodyAspect = chatBodyHeight/chatBodyWidth;
+
                     var imgClass = '';
 
-                    if(height*10/19 < chatBodyHeight){
+                    if(aspect*10/29 < chatBodyAspect){
                         imgClass = 'chat-image';
-                    } else if (height*10/39 < chatBodyHeight){
+                    } else if (aspect*10/49 < chatBodyAspect){
                         imgClass = 'chat-image-half';
                     }
 
                     if (imgClass != ''){
-                        $(firstLink).text( '' );
-                        $(firstLink).append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
+                        $(msgContent).find('a.linkified:first').text( '' );
+                        $(msgContent).find('a.linkified:first').append( '<img class="' + imgClass + '" src="' + imgSource + '">' );    
                     }
 
-                    $('#'+msgId).html(firstLink.html());
+                    $('#'+msgId).html(msgContent.html());
                     self.chatContent = $('#chat-messages').html();
                 });
                 var img = self.getImageURL(msg.email);
@@ -109,7 +113,6 @@ var app = new Vue({
                         audio.play();
                     }
                 }
-
                 self.msgCount++;
             }
 
@@ -366,27 +369,28 @@ $(window).on('load', function(){
         }
     });
 
-    $(window).on('dragover drop',function(e){
+    $(window).on('dragexit dragleave dragover drop',function(e){
         e.preventDefault();
         e.stopPropagation();
     });
 
-    $('#chat-body').on('dragenter', showOverlay);
+    $('#chat-body').on('dragenter dragover', showOverlay);
     
-    $('#overlay').on('dragover',function(e){
+    $('#overlay').on('dragenter dragover',function(e){
         e.preventDefault();
         e.stopPropagation();
-    });
-
-    $('#chat-body').on('drop',function(e){
-        e.preventDefault();
-        droppedFiles = e.originalEvent.dataTransfer.files;
-        app.sendFileContent(droppedFiles[0]); 
-
+    }).on('drop', function(e){
         $('#overlay').attr("hidden", true);
     });
 
-    $('#chat-body').on('dragleave', function(){
+    $('#chat-body').on('drop',function(e){
+        $('#overlay').attr("hidden", true);
+        e.preventDefault();
+        droppedFiles = e.originalEvent.dataTransfer.files;
+        app.sendFileContent(droppedFiles[0]); 
+    });
+
+    $('#chat-body').on('dragleave dragexit dragend drop', function(){
         $('#overlay').attr("hidden", true);
     })
 
