@@ -35,6 +35,7 @@ var app = new Vue({
         prevMsg: '',
         msgCount: 0,
         isNotice: false,
+        information: ''
     },
 
     created: function() {
@@ -109,10 +110,12 @@ var app = new Vue({
                             });
                         }
                     });
-                    if($("#switch-sound").is(':checked')){
-                        audio.play();
-                    }
                 }
+
+                if(self.isNotice && $("#switch-sound").is(':checked')){
+                    audio.play();
+                }
+
                 self.msgCount++;
             }
 
@@ -165,17 +168,29 @@ var app = new Vue({
     methods: {
         send: function () {
             if (this.newMsg != '') {
-                this.ws.send(
-                    JSON.stringify({
-                        email: this.email,
-                        username: this.username,
-                        message: $('<p>').html(this.newMsg).text(),
-                        information: ''
-                    }
-                ));
+                if(this.newMsg == 'Press enter to send clipboard.' && this.information != ''){
+                    this.ws.send(
+                        JSON.stringify({
+                            email: this.email,
+                            username: this.username,
+                            message: '#img#',
+                            information: this.information
+                        }
+                    ));        
+                }else{
+                    this.ws.send(
+                        JSON.stringify({
+                            email: this.email,
+                            username: this.username,
+                            message: $('<p>').html(this.newMsg).text(),
+                            information: ''
+                        }
+                    ));
+                }
             }
             this.prevMsg = this.newMsg;
             this.newMsg = '';
+            this.information = '';
         },
 
         getImageURL: function(email){
@@ -230,6 +245,11 @@ var app = new Vue({
             this.chatContent = '';
         },
 
+        clearMsg: function(){
+            this.newMsg = '';
+            this.information = '';
+        },
+
         gravatarURL: function(email) {
             return 'https://www.gravatar.com/avatar/' + CryptoJS.MD5(email);
         },
@@ -280,6 +300,21 @@ var app = new Vue({
                             information: reader.result
                         })
                     );
+                };
+                reader.onerror = function (error) {
+                    console.log('Error: ', error);
+                };
+            }
+        },
+        
+        setFileContent: function (file) {
+            if(this.joined){
+                var self = this;
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function () {
+                    self.information = reader.result;
+                    self.newMsg = "Press enter to send clipboard."
                 };
                 reader.onerror = function (error) {
                     console.log('Error: ', error);
@@ -409,17 +444,11 @@ $(window).on('load', function(){
     $(window).on('unload', saveCookie);
 
     $("#switch-noti").change( function(){
-        var val = $(this).is(':checked')
-        $("#switch-noti-m").prop( "checked", val );
-        $("#switch-sound").prop( "disabled", !val );
-        $("#switch-sound-m").prop( "disabled", !val );
+        $("#switch-noti-m").prop( "checked", $(this).is(':checked') );
     });
 
     $("#switch-noti-m").change( function(){
-        var val = $(this).is(':checked')
-        $("#switch-noti").prop( "checked", val );
-        $("#switch-sound").prop( "disabled", !val );
-        $("#switch-sound-m").prop( "disabled", !val );
+        $("#switch-noti").prop( "checked", $(this).is(':checked') );
     });
 
     $("#switch-sound").change( function(){
@@ -429,6 +458,17 @@ $(window).on('load', function(){
     $("#switch-sound-m").change( function(){
         $("#switch-sound").prop( "checked", $(this).is(':checked')) ;
     });
+
+    document.onpaste = function(event){
+        var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (index in items) {
+          var item = items[index];
+          if (item.kind === 'file') {
+            var blob = item.getAsFile();
+            app.setFileContent(blob);
+          }
+        }
+      }
 });
 
 navigator.serviceWorker.register('sw.js');
