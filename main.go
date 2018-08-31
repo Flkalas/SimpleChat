@@ -38,6 +38,7 @@ func main() {
 	http.HandleFunc("/ws", handleConnections)
 	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc("/sw.js", serviceWorkerHandler)
+	http.HandleFunc("/.well-known/acme-challenge/eXBRYrAKryEM6aP6qJsKpZ_iZdq1_m6hhp0MlCe25Fs", verificationHandler)
 
 	// log.Fatal(http.ListenAndServeTLS(":8080", "certificate.crt", "private.key", nil))
 	log.Fatal(http.ListenAndServeTLS(":443", "certificate.crt", "private.key", nil))
@@ -110,6 +111,10 @@ func serviceWorkerHandler(w http.ResponseWriter, r *http.Request) {
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")
+}
+
+func verificationHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./well-known/acme-challenge/eXBRYrAKryEM6aP6qJsKpZ_iZdq1_m6hhp0MlCe25Fs")
 }
 
 func handleMessages() {
